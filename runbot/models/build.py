@@ -59,6 +59,7 @@ class runbot_build(models.Model):
                                      ('fuzzy', 'Fuzzy - common ancestor found'),
                                      ('default', 'No match found - defaults to master')],
                                     string='Server branch matching')
+    extra_params = fields.Char('Extra cmd args')
 
     def copy(self, values=None):
         raise UserError("Cannot duplicate build!")
@@ -740,6 +741,8 @@ class runbot_build(models.Model):
         if grep(build._server("tools/config.py"), "test-enable"):
             cmd.append("--test-enable")
         cmd += ['-d', '%s-base' % build.dest, '-i', 'base', '--stop-after-init', '--log-level=test', '--max-cron-threads=0']
+        if build.extra_params:
+            cmd.extend(build.extra_params.split(' '))
         return self._spawn(cmd, lock_path, log_path, cpu_limit=300)
 
     def _job_20_test_all(self, build, lock_path, log_path):
@@ -749,6 +752,8 @@ class runbot_build(models.Model):
         if grep(build._server("tools/config.py"), "test-enable"):
             cmd.append("--test-enable")
         cmd += ['-d', '%s-all' % build.dest, '-i', mods, '--stop-after-init', '--log-level=test', '--max-cron-threads=0']
+        if build.extra_params:
+            cmd.extend(build.extra_params.split(' '))
         env = None
         if build.branch_id.coverage:
             pyversion = get_py_version(build)
