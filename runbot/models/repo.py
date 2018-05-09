@@ -211,6 +211,16 @@ class runbot_repo(models.Model):
                     builds_to_skip._skip()
                     if builds_to_skip:
                         build_info['sequence'] = builds_to_skip[0].sequence
+                    # testing builds are killed
+                    builds_to_kill = Build.search([
+                        ('branch_id', '=', branch.id),
+                        ('state', '=', 'testing'),
+                        ('commiter', '=', committer)
+                    ])
+                    for btk in builds_to_kill:
+                        try:
+                            repo._git(['merge-base', '--is-ancestor', btk.name, sha])
+                    except except subprocess.CalledProcessError:ssError:
                 Build.create(build_info)
 
         # skip old builds (if their sequence number is too low, they will not ever be built)
